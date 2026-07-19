@@ -1,0 +1,28 @@
+;;; paragtd-astro.el --- Astrological alert generation for PARA/GTD -*- lexical-binding: t; -*-
+
+(require 'paragtd-paths)
+
+(defcustom paragtd-astro-generator-command
+  (expand-file-name "bin/paragtd-astro-generate" (file-name-directory (directory-file-name (file-name-directory load-file-name))))
+  "Command that generates Org astrological alerts."
+  :type 'file
+  :group 'paragtd)
+
+(defun paragtd-astro-generate-year (year)
+  "Generate astrological alerts for YEAR into `astro.org`.
+The generator expects Kerykeion to be available to Python."
+  (interactive (list (read-number "Astro year: " (string-to-number (format-time-string "%Y")))))
+  (let ((file (paragtd-file "astro.org")))
+    (make-directory (file-name-directory file) t)
+    (unless (file-executable-p paragtd-astro-generator-command)
+      (user-error "Astro generator is not executable: %s" paragtd-astro-generator-command))
+    (with-current-buffer (get-buffer-create "*paragtd astro* ")
+      (erase-buffer)
+      (let ((status (call-process paragtd-astro-generator-command nil t t
+                                  "--year" (number-to-string year)
+                                  "--output" file)))
+        (unless (zerop status)
+          (error "Astro generation failed; see %s" (buffer-name)))))
+    (find-file file)))
+
+(provide 'paragtd-astro)

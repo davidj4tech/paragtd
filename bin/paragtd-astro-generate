@@ -1,0 +1,212 @@
+#!/usr/bin/env python3
+"""Generate Org alerts for lunar and astrological routines."""
+
+from __future__ import annotations
+
+import argparse
+import datetime as dt
+import os
+import sys
+from pathlib import Path
+
+REPO = Path(__file__).resolve().parents[1]
+VENV = REPO / ".venv"
+VENV_PYTHON = VENV / "bin" / "python"
+if VENV_PYTHON.exists() and Path(sys.prefix).resolve() != VENV.resolve():
+    os.execv(str(VENV_PYTHON), [str(VENV_PYTHON), *sys.argv])
+
+try:
+    import kerykeion  # noqa: F401
+    import swisseph as swe
+except ModuleNotFoundError as exc:
+    raise SystemExit(
+        "Kerykeion/pyswisseph is required. Run: python3 -m venv .venv && .venv/bin/pip install kerykeion"
+    ) from exc
+
+SIGNS = [
+    "Aries",
+    "Taurus",
+    "Gemini",
+    "Cancer",
+    "Leo",
+    "Virgo",
+    "Libra",
+    "Scorpio",
+    "Sagittarius",
+    "Capricorn",
+    "Aquarius",
+    "Pisces",
+]
+
+UTC = dt.timezone.utc
+
+
+def julday(moment: dt.datetime) -> float:
+    moment = moment.astimezone(UTC)
+    hour = moment.hour + moment.minute / 60 + moment.second / 3600
+    return swe.julday(moment.year, moment.month, moment.day, hour)
+
+
+def from_julday(jd: float) -> dt.datetime:
+    year, month, day, hour = swe.revjul(jd)
+    whole_hour = int(hour)
+    minute_float = (hour - whole_hour) * 60
+    minute = int(minute_float)
+    second = int(round((minute_float - minute) * 60))
+    if second == 60:
+        second = 0
+        minute += 1
+    if minute == 60:
+        minute = 0
+        whole_hour += 1
+    return dt.datetime(year, month, day, whole_hour, minute, second, tzinfo=UTC)
+
+
+def longitude(body: int, moment: dt.datetime) -> float:
+    return swe.calc_ut(julday(moment), body)[0][0] % 360
+
+
+def angle_diff(a: float, b: float) -> float:
+    return (a - b + 180) % 360 - 180
+
+
+def sign_for_lon(lon: float) -> str:
+    return SIGNS[int(lon // 30) % 12]
+
+
+def org_timestamp(moment: dt.datetime) -> str:
+    return moment.astimezone(UTC).strftime("<%Y-%m-%d %a %H:%M>")
+
+
+def bisect_time(start: dt.datetime, end: dt.datetime, predicate, iterations: int = 40) -> dt.datetime:
+    low, high = start, end
+    initial = predicate(low)
+    for _ in range(iterations):
+        mid = low + (high - low) / 2
+        if predicate(mid) == initial:
+            low = mid
+        else:
+            high = mid
+    return high.replace(second=0, microsecond=0)
+
+
+def find_threshold_crossings(year: int, value_fn, threshold: float, step: dt.timedelta) -> list[dt.datetime]:
+    start = dt.datetime(year, 1, 1, tzinfo=UTC)
+    end = dt.datetime(year + 1, 1, 1, tzinfo=UTC)
+    events: list[dt.datetime] = []
+    t = start
+    prev = angle_diff(value_fn(t), threshold)
+    while t < end:
+        nt = min(t + step, end)
+        cur = angle_diff(value_fn(nt), threshold)
+        if prev == 0 or cur == 0 or (prev < 0 <= cur) or (prev > 0 >= cur and abs(prev - cur) < 180):
+            event = bisect_time(t, nt, lambda m: angle_diff(value_fn(m), threshold) >= 0)
+            if event.year == year and (not events or abs((event - events[-1]).total_seconds()) > 86400):
+                events.append(event)
+        t, prev = nt, cur
+    return events
+
+
+def moon_phase_events(year: int) -> list[tuple[str, dt.datetime]]:
+    def elongation(moment: dt.datetime) -> float:
+        return (longitude(swe.MOON, moment) - longitude(swe.SUN, moment)) % 360
+
+    events = [("New moon routine", t) for t in find_threshold_crossings(year, elongation, 0, dt.timedelta(hours=6))]
+    events += [("Full moon routine", t) for t in find_threshold_crossings(year, elongation, 180, dt.timedelta(hours=6))]
+    return sorted(events, key=lambda item: item[1])
+
+
+def body_ingresses(year: int, body: int, label: str, step: dt.timedelta) -> list[tuple[str, str, dt.datetime]]:
+    start = dt.datetime(year, 1, 1, tzinfo=UTC)
+    end = dt.datetime(year + 1, 1, 1, tzinfo=UTC)
+    events: list[tuple[str, str, dt.datetime]] = []
+    t = start
+    prev_sign = int(longitude(body, t) // 30)
+    while t < end:
+        nt = min(t + step, end)
+        next_sign = int(longitude(body, nt) // 30)
+        if next_sign != prev_sign:
+            event = bisect_time(t, nt, lambda m: int(longitude(body, m) // 30) != prev_sign)
+            sign = SIGNS[int(longitude(body, event) // 30) % 12]
+            if event.year == year:
+                events.append((label, sign, event))
+        t, prev_sign = nt, next_sign
+    return events
+
+
+def sun_decan_events(year: int) -> list[tuple[str, int, dt.datetime]]:
+    start = dt.datetime(year, 1, 1, tzinfo=UTC)
+    end = dt.datetime(year + 1, 1, 1, tzinfo=UTC)
+    events: list[tuple[str, int, dt.datetime]] = []
+    t = start
+    prev_bucket = int(longitude(swe.SUN, t) // 10)
+    while t < end:
+        nt = min(t + dt.timedelta(days=1), end)
+        next_bucket = int(longitude(swe.SUN, nt) // 10)
+        if next_bucket != prev_bucket:
+            event = bisect_time(t, nt, lambda m: int(longitude(swe.SUN, m) // 10) != prev_bucket)
+            lon = longitude(swe.SUN, event)
+            sign = sign_for_lon(lon)
+            decan = int((lon % 30) // 10) + 1
+            if event.year == year:
+                events.append((sign, decan, event))
+        t, prev_bucket = nt, next_bucket
+    return events
+
+
+def heading(lines: list[str], level: int, title: str, moment: dt.datetime, props: dict[str, str], body: list[str]) -> None:
+    lines.append(f"{'*' * level} TODO {title}")
+    lines.append(f"SCHEDULED: {org_timestamp(moment)}")
+    lines.append(":PROPERTIES:")
+    lines.append(":TIMEZONE: UTC")
+    for key, value in props.items():
+        lines.append(f":{key}: {value}")
+    lines.append(":END:")
+    lines.extend(body)
+    lines.append("")
+
+
+def write_alerts(year: int, output: Path) -> None:
+    lines: list[str] = [
+        "#+title: Astro Alerts",
+        "#+filetags: astro lunar routines",
+        "",
+        f"* {year} Lunar Routines",
+    ]
+    for title, moment in moon_phase_events(year):
+        heading(lines, 2, title, moment, {"BODY": "Moon"}, ["- Perform the lunar check-in/review."])
+
+    lines.append(f"* {year} Sun Sign Alerts")
+    aries_ingress = None
+    for _, sign, moment in body_ingresses(year, swe.SUN, "Sun", dt.timedelta(days=1)):
+        if sign == "Aries":
+            aries_ingress = moment
+        heading(lines, 2, f"Sun enters {sign}", moment, {"BODY": "Sun", "SIGN": sign}, ["- Review the season's emphasis."])
+
+    lines.append(f"* {year} Decan Alerts")
+    for sign, decan, moment in sun_decan_events(year):
+        heading(lines, 2, f"{sign} decan {decan} begins", moment, {"SIGN": sign, "DECAN": str(decan)}, ["- Notice the shift in tone and emphasis."])
+
+    lines.append(f"* {year} Astrological Year")
+    if aries_ingress is not None:
+        heading(lines, 2, "Astrological new year / Aries ingress", aries_ingress, {"BODY": "Sun", "SIGN": "Aries"}, ["- Begin annual astrological cycle review."])
+
+    lines.append(f"* {year} Moon Sign Alerts")
+    for _, sign, moment in body_ingresses(year, swe.MOON, "Moon", dt.timedelta(hours=3)):
+        heading(lines, 2, f"Moon enters {sign}", moment, {"BODY": "Moon", "SIGN": sign}, ["- Note the emotional/weather shift."])
+
+    output.write_text("\n".join(lines), encoding="utf-8")
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--year", type=int, required=True)
+    parser.add_argument("--output", type=Path, required=True)
+    args = parser.parse_args()
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    write_alerts(args.year, args.output)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

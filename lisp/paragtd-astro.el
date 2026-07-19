@@ -8,6 +8,11 @@
   :type 'file
   :group 'paragtd)
 
+(defcustom paragtd-astro-timezone "Australia/Melbourne"
+  "IANA timezone used when writing astrological Org timestamps."
+  :type 'string
+  :group 'paragtd)
+
 (defun paragtd-astro-generate-year (year)
   "Generate astrological alerts for YEAR into `astro.org`.
 The generator expects Kerykeion to be available to Python."
@@ -20,7 +25,8 @@ The generator expects Kerykeion to be available to Python."
       (erase-buffer)
       (let ((status (call-process paragtd-astro-generator-command nil t t
                                   "--year" (number-to-string year)
-                                  "--output" file)))
+                                  "--output" file
+                                  "--timezone" paragtd-astro-timezone)))
         (unless (zerop status)
           (error "Astro generation failed; see %s" (buffer-name)))))
     (find-file file)))

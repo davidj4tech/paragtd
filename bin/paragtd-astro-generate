@@ -8,6 +8,7 @@ import datetime as dt
 import os
 import sys
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 REPO = Path(__file__).resolve().parents[1]
 VENV = REPO / ".venv"
@@ -39,6 +40,7 @@ SIGNS = [
 ]
 
 UTC = dt.timezone.utc
+DEFAULT_TIMEZONE = "Australia/Melbourne"
 
 
 def julday(moment: dt.datetime) -> float:
@@ -74,8 +76,8 @@ def sign_for_lon(lon: float) -> str:
     return SIGNS[int(lon // 30) % 12]
 
 
-def org_timestamp(moment: dt.datetime) -> str:
-    return moment.astimezone(UTC).strftime("<%Y-%m-%d %a %H:%M>")
+def org_timestamp(moment: dt.datetime, timezone: ZoneInfo) -> str:
+    return moment.astimezone(timezone).strftime("<%Y-%m-%d %a %H:%M>")
 
 
 def bisect_time(start: dt.datetime, end: dt.datetime, predicate, iterations: int = 40) -> dt.datetime:
@@ -154,11 +156,12 @@ def sun_decan_events(year: int) -> list[tuple[str, int, dt.datetime]]:
     return events
 
 
-def heading(lines: list[str], level: int, title: str, moment: dt.datetime, props: dict[str, str], body: list[str]) -> None:
+def heading(lines: list[str], level: int, title: str, moment: dt.datetime, timezone: ZoneInfo, props: dict[str, str], body: list[str]) -> None:
     lines.append(f"{'*' * level} TODO {title}")
-    lines.append(f"SCHEDULED: {org_timestamp(moment)}")
+    lines.append(f"SCHEDULED: {org_timestamp(moment, timezone)}")
     lines.append(":PROPERTIES:")
-    lines.append(":TIMEZONE: UTC")
+    lines.append(f":TIMEZONE: {timezone.key}")
+    lines.append(f":UTC: {moment.astimezone(UTC).strftime('%Y-%m-%d %H:%M')}")
     for key, value in props.items():
         lines.append(f":{key}: {value}")
     lines.append(":END:")
@@ -166,7 +169,8 @@ def heading(lines: list[str], level: int, title: str, moment: dt.datetime, props
     lines.append("")
 
 
-def write_alerts(year: int, output: Path) -> None:
+def write_alerts(year: int, output: Path, timezone_name: str) -> None:
+    timezone = ZoneInfo(timezone_name)
     lines: list[str] = [
         "#+title: Astro Alerts",
         "#+filetags: astro lunar routines",
@@ -174,26 +178,26 @@ def write_alerts(year: int, output: Path) -> None:
         f"* {year} Lunar Routines",
     ]
     for title, moment in moon_phase_events(year):
-        heading(lines, 2, title, moment, {"BODY": "Moon"}, ["- Perform the lunar check-in/review."])
+        heading(lines, 2, title, moment, timezone, {"BODY": "Moon"}, ["- Perform the lunar check-in/review."])
 
     lines.append(f"* {year} Sun Sign Alerts")
     aries_ingress = None
     for _, sign, moment in body_ingresses(year, swe.SUN, "Sun", dt.timedelta(days=1)):
         if sign == "Aries":
             aries_ingress = moment
-        heading(lines, 2, f"Sun enters {sign}", moment, {"BODY": "Sun", "SIGN": sign}, ["- Review the season's emphasis."])
+        heading(lines, 2, f"Sun enters {sign}", moment, timezone, {"BODY": "Sun", "SIGN": sign}, ["- Review the season's emphasis."])
 
     lines.append(f"* {year} Decan Alerts")
     for sign, decan, moment in sun_decan_events(year):
-        heading(lines, 2, f"{sign} decan {decan} begins", moment, {"SIGN": sign, "DECAN": str(decan)}, ["- Notice the shift in tone and emphasis."])
+        heading(lines, 2, f"{sign} decan {decan} begins", moment, timezone, {"SIGN": sign, "DECAN": str(decan)}, ["- Notice the shift in tone and emphasis."])
 
     lines.append(f"* {year} Astrological Year")
     if aries_ingress is not None:
-        heading(lines, 2, "Astrological new year / Aries ingress", aries_ingress, {"BODY": "Sun", "SIGN": "Aries"}, ["- Begin annual astrological cycle review."])
+        heading(lines, 2, "Astrological new year / Aries ingress", aries_ingress, timezone, {"BODY": "Sun", "SIGN": "Aries"}, ["- Begin annual astrological cycle review."])
 
     lines.append(f"* {year} Moon Sign Alerts")
     for _, sign, moment in body_ingresses(year, swe.MOON, "Moon", dt.timedelta(hours=3)):
-        heading(lines, 2, f"Moon enters {sign}", moment, {"BODY": "Moon", "SIGN": sign}, ["- Note the emotional/weather shift."])
+        heading(lines, 2, f"Moon enters {sign}", moment, timezone, {"BODY": "Moon", "SIGN": sign}, ["- Note the emotional/weather shift."])
 
     output.write_text("\n".join(lines), encoding="utf-8")
 
@@ -202,9 +206,10 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--year", type=int, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--timezone", default=DEFAULT_TIMEZONE)
     args = parser.parse_args()
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    write_alerts(args.year, args.output)
+    write_alerts(args.year, args.output, args.timezone)
     return 0
 
 

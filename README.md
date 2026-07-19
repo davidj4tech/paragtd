@@ -42,8 +42,10 @@ available:
 ```sh
 python3 -m venv .venv
 .venv/bin/pip install kerykeion
-bin/paragtd-astro-generate --year 2026 --output ~/org/astro.org
+bin/paragtd-astro-generate --year 2026 --output ~/org/astro.org --timezone Australia/Melbourne
 ```
 
-It currently generates precise UTC alerts for new moons, full moons, sun sign
-ingresses, sun decans, Aries ingress / astrological year, and moon sign ingresses.
+It currently generates precise alerts, scheduled in Melbourne time by default,
+for new moons, full moons, sun sign ingresses, sun decans, Aries ingress /
+astrological year, and moon sign ingresses. Each entry also stores the UTC time
+as an Org property.

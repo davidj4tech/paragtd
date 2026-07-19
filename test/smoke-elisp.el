@@ -1,0 +1,8 @@
+(add-to-list 'load-path (expand-file-name "../lisp" (file-name-directory load-file-name)))
+(require 'paragtd)
+(paragtd-setup)
+(unless (member (expand-file-name "~/org/astro.org") org-agenda-files)
+  (error "astro.org missing from agenda files"))
+(unless (member (expand-file-name "~/org/routines.org") org-agenda-files)
+  (error "routines.org missing from agenda files"))
+(princ "paragtd elisp smoke OK\n")

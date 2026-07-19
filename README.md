@@ -21,6 +21,16 @@ This package owns the reusable workflow code. Editor-specific repos, such as
 - `lisp/paragtd-astro.el` - Emacs wrapper for astro generation
 - `bin/paragtd-astro-generate` - Python generator for `astro.org`
 
+## Bootstrap
+
+```sh
+bin/bootstrap
+bin/test
+```
+
+`bin/bootstrap` creates the repo-local virtualenv, installs Kerykeion, and runs
+basic Python/Emacs smoke checks.
+
 ## Emacs Usage
 
 ```elisp
@@ -40,8 +50,7 @@ The generator uses Kerykeion/pyswisseph from the repo-local virtualenv when
 available:
 
 ```sh
-python3 -m venv .venv
-.venv/bin/pip install kerykeion
+bin/bootstrap
 bin/paragtd-astro-generate --year 2026 --output ~/org/astro.org --timezone Australia/Melbourne
 ```
 

@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+venv_dir="$repo_dir/.venv"
+
+if [[ ! -d "$venv_dir" ]]; then
+  python3 -m venv "$venv_dir"
+fi
+
+"$venv_dir/bin/pip" install --upgrade pip
+"$venv_dir/bin/pip" install kerykeion
+
+"$repo_dir/bin/paragtd-astro-generate" --year "$(date +%Y)" --output /tmp/paragtd-astro-smoke.org >/dev/null
+emacs --batch \
+  --eval "(add-to-list 'load-path \"$repo_dir/lisp\")" \
+  --eval "(require 'paragtd)" \
+  --eval "(paragtd-setup)" \
+  --eval "(unless (member (expand-file-name \"~/org/astro.org\") org-agenda-files) (error \"astro.org missing from agenda\"))" \
+  --eval "(unless (member (expand-file-name \"~/org/routines.org\") org-agenda-files) (error \"routines.org missing from agenda\"))"
+
+echo "paragtd bootstrap OK"

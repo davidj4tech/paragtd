@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+python_bin="$repo_dir/.venv/bin/python"
+
+if [[ ! -x "$python_bin" ]]; then
+  echo "Missing .venv. Run bin/bootstrap first." >&2
+  exit 1
+fi
+
+"$python_bin" "$repo_dir/test/test_astro_generate.py"
+emacs --batch -l "$repo_dir/test/smoke-elisp.el"

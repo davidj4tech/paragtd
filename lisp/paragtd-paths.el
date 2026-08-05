@@ -38,11 +38,30 @@
   "Return the agenda files for the PARA/GTD system."
   (mapcar #'paragtd-file paragtd-core-files))
 
+(defcustom paragtd-astro-stale-days 2
+  "Days after which a past astro alert is skipped in agenda views.
+Astro alerts are point-in-time and never marked DONE, so without this
+every past entry lingers as overdue."
+  :type 'integer
+  :group 'paragtd)
+
+(defun paragtd-astro-skip-stale ()
+  "Skip astro.org entries scheduled more than `paragtd-astro-stale-days` ago.
+For use as `org-agenda-skip-function-global'; leaves other files alone."
+  (when (and buffer-file-name
+             (string= (file-name-nondirectory buffer-file-name) "astro.org"))
+    (let ((sched (org-entry-get nil "SCHEDULED")))
+      (when (and sched
+                 (< (org-time-stamp-to-now sched)
+                    (- paragtd-astro-stale-days)))
+        (org-entry-end-position)))))
+
 (defun paragtd-setup-paths ()
   "Install Org paths and custom agenda commands."
   (setq org-directory paragtd-org-directory
         org-roam-directory paragtd-roam-directory
-        org-agenda-files (paragtd-agenda-files))
+        org-agenda-files (paragtd-agenda-files)
+        org-agenda-skip-function-global #'paragtd-astro-skip-stale)
   (setq org-agenda-custom-commands
         `(("k" "Tickler review"
            ((agenda ""

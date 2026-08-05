@@ -73,7 +73,8 @@ For use as `org-agenda-skip-function-global'; leaves other files alone."
                     ((org-agenda-overriding-header "Routines")
                      (org-agenda-span 14)
                      (org-agenda-files (list ,(paragtd-file "routines.org")))))))
-          ("a" "Astro alerts"
+          ;; "A", not "a": "a" would shadow the default day/week agenda
+          ("A" "Astro alerts"
            ((agenda ""
                     ((org-agenda-overriding-header "Astro alerts")
                      (org-agenda-span 45)

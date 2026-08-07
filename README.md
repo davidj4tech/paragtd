@@ -1,9 +1,12 @@
 # paragtd
 
-Portable Org workflow package for Ryder's PARA/GTD system.
+Portable Org workflow package for a PARA/GTD system: paths and agenda views,
+capture templates, recurring routines, and astrological/lunar alerts.
 
-This package owns the reusable workflow code. Editor-specific repos, such as
-`spacemacs-config`, should only adapt/load it.
+This package owns the reusable workflow code and works in any Emacs (no
+Spacemacs/Doom dependency). Editor-specific configs should only adapt/load it;
+site-local capture templates can be appended via
+`paragtd-capture-extra-templates` without modifying the package.
 
 ## Scope
 
@@ -58,3 +61,7 @@ It currently generates precise alerts, scheduled in Melbourne time by default,
 for new moons, full moons, sun sign ingresses, sun decans, Aries ingress /
 astrological year, and moon sign ingresses. Each entry also stores the UTC time
 as an Org property.
+
+## License
+
+GPL-3.0-or-later — see [COPYING](COPYING).

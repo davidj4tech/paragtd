@@ -179,14 +179,17 @@ def heading(lines: list[str], level: int, title: str, moment: dt.datetime, timez
     lines.append("")
 
 
-def write_alerts(year: int, output: Path, timezone_name: str) -> None:
+def write_alerts(year: int, output: Path, timezone_name: str, append: bool = False) -> None:
     timezone = ZoneInfo(timezone_name)
-    lines: list[str] = [
-        "#+title: Astro Alerts",
-        "#+filetags: astro lunar routines",
-        "",
-        f"* {year} Lunar Routines",
-    ]
+    existing = output.read_text(encoding="utf-8") if append and output.exists() else None
+    lines: list[str] = []
+    if existing is None:
+        lines += [
+            "#+title: Astro Alerts",
+            "#+filetags: astro lunar routines",
+            "",
+        ]
+    lines.append(f"* {year} Lunar Routines")
     for title, phase, moment in moon_phase_events(year):
         note = (
             "- Perform the lunar check-in/review."
@@ -214,7 +217,14 @@ def write_alerts(year: int, output: Path, timezone_name: str) -> None:
     for _, sign, moment in body_ingresses(year, swe.MOON, "Moon", dt.timedelta(hours=3)):
         heading(lines, 2, f"Moon enters {sign}", moment, timezone, {"BODY": "Moon", "SIGN": sign}, ["- Note the emotional/weather shift."])
 
-    output.write_text("\n".join(lines), encoding="utf-8")
+    text = "\n".join(lines)
+    if existing is not None:
+        if f"* {year} Lunar Routines" in existing:
+            raise SystemExit(f"{output} already contains {year} alerts; regenerate without --append")
+        separator = "" if existing.endswith("\n") else "\n"
+        output.write_text(existing + separator + text, encoding="utf-8")
+    else:
+        output.write_text(text, encoding="utf-8")
 
 
 def main() -> int:
@@ -222,9 +232,14 @@ def main() -> int:
     parser.add_argument("--year", type=int, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--timezone", default=DEFAULT_TIMEZONE)
+    parser.add_argument(
+        "--append",
+        action="store_true",
+        help="Append this year to an existing file instead of replacing it.",
+    )
     args = parser.parse_args()
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    write_alerts(args.year, args.output, args.timezone)
+    write_alerts(args.year, args.output, args.timezone, args.append)
     return 0
 
 

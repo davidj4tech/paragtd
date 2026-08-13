@@ -28,9 +28,11 @@ def test_astro_generator_outputs_expected_sections() -> None:
     expected = [
         "* 2026 Lunar Routines",
         "New moon routine",
+        "First quarter moon routine",
         "Full moon routine",
+        "Last quarter moon routine",
         "Sun enters Aries",
-        "Aries decan 1 begins",
+        "Sun enters Aries decan 1",
         "Astrological new year / Aries ingress",
         "Moon enters Aries",
         ":TIMEZONE: Australia/Melbourne",

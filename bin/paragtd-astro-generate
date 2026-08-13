@@ -109,13 +109,23 @@ def find_threshold_crossings(year: int, value_fn, threshold: float, step: dt.tim
     return events
 
 
-def moon_phase_events(year: int) -> list[tuple[str, dt.datetime]]:
+def moon_phase_events(year: int) -> list[tuple[str, str, dt.datetime]]:
     def elongation(moment: dt.datetime) -> float:
         return (longitude(swe.MOON, moment) - longitude(swe.SUN, moment)) % 360
 
-    events = [("New moon routine", t) for t in find_threshold_crossings(year, elongation, 0, dt.timedelta(hours=6))]
-    events += [("Full moon routine", t) for t in find_threshold_crossings(year, elongation, 180, dt.timedelta(hours=6))]
-    return sorted(events, key=lambda item: item[1])
+    phases = [
+        ("New moon routine", "New", 0),
+        ("First quarter moon routine", "First quarter", 90),
+        ("Full moon routine", "Full", 180),
+        ("Last quarter moon routine", "Last quarter", 270),
+    ]
+    events: list[tuple[str, str, dt.datetime]] = []
+    for title, phase, threshold in phases:
+        events += [
+            (title, phase, t)
+            for t in find_threshold_crossings(year, elongation, threshold, dt.timedelta(hours=6))
+        ]
+    return sorted(events, key=lambda item: item[2])
 
 
 def body_ingresses(year: int, body: int, label: str, step: dt.timedelta) -> list[tuple[str, str, dt.datetime]]:
@@ -177,8 +187,13 @@ def write_alerts(year: int, output: Path, timezone_name: str) -> None:
         "",
         f"* {year} Lunar Routines",
     ]
-    for title, moment in moon_phase_events(year):
-        heading(lines, 2, title, moment, timezone, {"BODY": "Moon"}, ["- Perform the lunar check-in/review."])
+    for title, phase, moment in moon_phase_events(year):
+        note = (
+            "- Perform the lunar check-in/review."
+            if phase in ("New", "Full")
+            else "- Quick lunar check-in: course-correct on what the last phase started."
+        )
+        heading(lines, 2, title, moment, timezone, {"BODY": "Moon", "PHASE": phase}, [note])
 
     lines.append(f"* {year} Sun Sign Alerts")
     aries_ingress = None
@@ -189,7 +204,7 @@ def write_alerts(year: int, output: Path, timezone_name: str) -> None:
 
     lines.append(f"* {year} Decan Alerts")
     for sign, decan, moment in sun_decan_events(year):
-        heading(lines, 2, f"{sign} decan {decan} begins", moment, timezone, {"SIGN": sign, "DECAN": str(decan)}, ["- Notice the shift in tone and emphasis."])
+        heading(lines, 2, f"Sun enters {sign} decan {decan}", moment, timezone, {"BODY": "Sun", "SIGN": sign, "DECAN": str(decan)}, ["- Notice the shift in tone and emphasis."])
 
     lines.append(f"* {year} Astrological Year")
     if aries_ingress is not None:

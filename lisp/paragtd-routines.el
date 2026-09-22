@@ -8,7 +8,7 @@
 
 * Daily
 ** TODO Morning routine
-SCHEDULED: <2026-07-20 Mon +1d>
+SCHEDULED: <2026-07-20 Mon .+1d>
 :PROPERTIES:
 :STYLE: habit
 :END:
@@ -17,7 +17,7 @@ SCHEDULED: <2026-07-20 Mon +1d>
 - Choose top 3 outcomes
 
 ** TODO Evening shutdown
-SCHEDULED: <2026-07-20 Mon +1d>
+SCHEDULED: <2026-07-20 Mon .+1d>
 :PROPERTIES:
 :STYLE: habit
 :END:
@@ -27,41 +27,41 @@ SCHEDULED: <2026-07-20 Mon +1d>
 
 * Weekly
 ** TODO Weekly review
-SCHEDULED: <2026-07-26 Sun +1w>
+SCHEDULED: <2026-07-26 Sun ++1w>
 - Get clear: inboxes, notes, loose paper
 - Get current: projects, waiting-for, tickler, calendar
 - Get creative: someday/maybe and visioning
 
 * Fortnightly
 ** TODO Fortnightly planning
-SCHEDULED: <2026-08-02 Sun +2w>
+SCHEDULED: <2026-08-02 Sun ++2w>
 - Review active areas
 - Rebalance next actions
 - Check recurring commitments
 
 * Monthly
 ** TODO Monthly review
-SCHEDULED: <2026-08-01 Sat +1m>
+SCHEDULED: <2026-08-01 Sat ++1m>
 - Review areas and projects
 - Check money, health, home, relationships
 - Choose monthly theme
 
 * Yearly
 ** TODO Yearly review
-SCHEDULED: <2027-01-01 Fri +1y>
+SCHEDULED: <2027-01-01 Fri ++1y>
 - Review the year behind
 - Define the year ahead
 - Refresh principles and horizons
 
 * 5-Yearly
 ** TODO 5-year horizon review
-SCHEDULED: <2030-01-01 Tue +5y>
+SCHEDULED: <2030-01-01 Tue ++5y>
 - Review identity, vocation, place, relationships, body, money
 - Decide what to deepen, stop, and begin
 
 * 10-Yearly
 ** TODO 10-year horizon review
-SCHEDULED: <2035-01-01 Mon +10y>
+SCHEDULED: <2035-01-01 Mon ++10y>
 - Revisit life architecture
 - Name the next decade's mythic arc
 "

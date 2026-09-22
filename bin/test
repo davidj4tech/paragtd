@@ -11,3 +11,4 @@ fi
 
 "$python_bin" "$repo_dir/test/test_astro_generate.py"
 emacs --batch -l "$repo_dir/test/smoke-elisp.el"
+emacs --batch -l "$repo_dir/test/test-sequence.el"

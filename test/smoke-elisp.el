@@ -5,4 +5,8 @@
   (error "astro.org missing from agenda files"))
 (unless (member (expand-file-name "~/org/routines.org") org-agenda-files)
   (error "routines.org missing from agenda files"))
+(unless org-enforce-todo-dependencies
+  (error "task dependencies not enforced"))
+(unless (assoc "p" (paragtd-capture-templates))
+  (error "sequenced project capture template missing"))
 (princ "paragtd elisp smoke OK\n")

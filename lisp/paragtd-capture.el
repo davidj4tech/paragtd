@@ -1,6 +1,7 @@
 ;;; paragtd-capture.el --- PARA/GTD Org capture templates -*- lexical-binding: t; -*-
 
 (require 'paragtd-paths)
+(require 'paragtd-sequence)
 
 (defun paragtd-refile-to-tickler ()
   "Move the current subtree to the tickler file and prompt for a schedule date."
@@ -42,6 +43,13 @@
      "* WAITING %?\n:PROPERTIES:\n:CREATED: %U\n:END:\n")
     ("k" "Tickler / defer until" entry (file+headline ,(paragtd-file "tickler.org") "Tickler")
      "* TODO %?\nSCHEDULED: %^T\n:PROPERTIES:\n:CREATED: %U\n:END:\n")
+    ("p" "Project (sequenced steps)" entry (file ,(paragtd-file "projects.org"))
+     ,(concat "* TODO %?\n:PROPERTIES:\n:CREATED: %U\n:ORDERED: t\n:END:\n"
+              "** NEXT First step\n:PROPERTIES:\n:TRIGGER: "
+              (paragtd-sequence-trigger) "\n:END:\n"
+              "** TODO Second step\n:PROPERTIES:\n:TRIGGER: "
+              (paragtd-sequence-trigger) "\n:END:\n"
+              "** TODO Third step\n"))
     ("j" "Journal entry" entry (file+olp+datetree ,(paragtd-file "journal.org"))
      "* %U %?\n" :tree-type week)))
 

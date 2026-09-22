@@ -7,6 +7,7 @@
 
 (require 'paragtd-paths)
 (require 'paragtd-capture)
+(require 'paragtd-sequence)
 (require 'paragtd-routines)
 (require 'paragtd-astro)
 
@@ -15,7 +16,8 @@
   "Set up the PARA/GTD workflow package."
   (interactive)
   (paragtd-setup-paths)
-  (paragtd-setup-capture))
+  (paragtd-setup-capture)
+  (paragtd-setup-sequence))
 
 (provide 'paragtd)
 

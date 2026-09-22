@@ -30,6 +30,14 @@
   :type '(repeat string)
   :group 'paragtd)
 
+(defcustom paragtd-todo-keywords
+  '((sequence "TODO(t)" "NEXT(n)" "WAITING(w@/!)" "|" "DONE(d!)" "CANCELLED(c@)"))
+  "TODO keywords for the PARA/GTD system.
+NEXT and WAITING are emitted by the capture templates, so Org has to
+know them; without this they are just part of the heading text."
+  :type 'sexp
+  :group 'paragtd)
+
 (defun paragtd-file (name)
   "Return absolute path for Org file NAME under `paragtd-org-directory`."
   (expand-file-name name paragtd-org-directory))
@@ -60,6 +68,7 @@ For use as `org-agenda-skip-function-global'; leaves other files alone."
   "Install Org paths and custom agenda commands."
   (setq org-directory paragtd-org-directory
         org-roam-directory paragtd-roam-directory
+        org-todo-keywords paragtd-todo-keywords
         org-agenda-files (paragtd-agenda-files)
         org-agenda-skip-function-global #'paragtd-astro-skip-stale)
   (setq org-agenda-custom-commands

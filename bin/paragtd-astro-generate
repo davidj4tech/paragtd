@@ -89,7 +89,9 @@ def bisect_time(start: dt.datetime, end: dt.datetime, predicate, iterations: int
             low = mid
         else:
             high = mid
-    return high.replace(second=0, microsecond=0)
+    # Not truncated: the minute floor lands before the crossing, so a sign read
+    # there would still be the old one. The Org timestamps drop the seconds.
+    return high
 
 
 def find_threshold_crossings(year: int, value_fn, threshold: float, step: dt.timedelta) -> list[dt.datetime]:
@@ -167,14 +169,16 @@ def sun_decan_events(year: int) -> list[tuple[str, int, dt.datetime]]:
 
 
 def heading(lines: list[str], level: int, title: str, moment: dt.datetime, timezone: ZoneInfo, props: dict[str, str], body: list[str]) -> None:
-    lines.append(f"{'*' * level} TODO {title}")
-    lines.append(f"SCHEDULED: {org_timestamp(moment, timezone)}")
+    # A plain active timestamp, not a scheduled TODO: an alert is an event on
+    # its day, with nothing to mark done, so it never lingers as overdue.
+    lines.append(f"{'*' * level} {title}")
     lines.append(":PROPERTIES:")
     lines.append(f":TIMEZONE: {timezone.key}")
     lines.append(f":UTC: {moment.astimezone(UTC).strftime('%Y-%m-%d %H:%M')}")
     for key, value in props.items():
         lines.append(f":{key}: {value}")
     lines.append(":END:")
+    lines.append(org_timestamp(moment, timezone))
     lines.extend(body)
     lines.append("")
 

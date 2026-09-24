@@ -40,6 +40,10 @@ def test_astro_generator_outputs_expected_sections() -> None:
     ]
     missing = [item for item in expected if item not in text]
     assert not missing, f"missing expected content: {missing}"
+    # Events on their day, not TODOs that go overdue.
+    assert "TODO" not in text and "SCHEDULED:" not in text
+    # The March equinox is the Sun entering Aries, not Pisces.
+    assert "** Sun enters Aries\n:PROPERTIES:\n:TIMEZONE: Australia/Melbourne\n:UTC: 2026-03-20 14:45\n" in text
 
 
 if __name__ == "__main__":

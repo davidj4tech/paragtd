@@ -63,8 +63,10 @@ bin/paragtd-astro-generate --year 2026 --output ~/org/astro.org --timezone Austr
 
 It currently generates precise alerts, scheduled in Melbourne time by default,
 for new moons, full moons, sun sign ingresses, sun decans, Aries ingress /
-astrological year, and moon sign ingresses. Each entry also stores the UTC time
-as an Org property.
+astrological year, and moon sign ingresses. Each is a plain heading with an
+active timestamp rather than a scheduled TODO, so it shows in the agenda on its
+day and never lingers as overdue. Each entry also stores the UTC time as an Org
+property.
 
 ## License
 

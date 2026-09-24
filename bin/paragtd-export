@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Write .paragtd.json (lisp/paragtd-export.el) from a batch Emacs: paragtd's
+# own defaults, with none of a site's settings. A running Emacs writes the
+# real one itself at startup; this is for a host without one.
+#   bin/paragtd-export [FILE]   (default: .paragtd.json in the Org directory)
+set -euo pipefail
+repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+PARAGTD_EXPORT_TO="${1:-}" emacs --batch -L "$repo_dir/lisp" -l org -l paragtd --eval '
+(let ((to (getenv "PARAGTD_EXPORT_TO")))
+  (paragtd-setup)
+  (princ (or (paragtd-export (and to (not (string-empty-p to)) (expand-file-name to)))
+             "(nothing written: no Org directory)"))
+  (terpri))'

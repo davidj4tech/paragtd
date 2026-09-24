@@ -22,6 +22,8 @@ site-local capture templates can be appended via
 - `lisp/paragtd-paths.el` - Org directories, agenda files, custom agenda views
 - `lisp/paragtd-capture.el` - capture templates and tickler helper
 - `lisp/paragtd-sequence.el` - sequenced projects (task dependencies)
+- `lisp/paragtd-export.el` - `.paragtd.json`, the setup described for tools outside Emacs
+- `bin/paragtd-export` - write it from a batch Emacs (paragtd's defaults only)
 - `lisp/paragtd-routines.el` - routine scaffolding
 - `lisp/paragtd-astro.el` - Emacs wrapper for astro generation
 - `bin/paragtd-astro-generate` - Python generator for `astro.org`
@@ -107,3 +109,19 @@ Org cannot work a Gantt chart backwards from an end date to derive starts.
 `paragtd-todo-keywords` defines `TODO/NEXT/WAITING/DONE/CANCELLED`. The
 capture templates emit `NEXT` and `WAITING`, and until Org is told about
 them it treats them as ordinary heading text rather than states.
+
+## Outside Emacs
+
+`paragtd-setup` writes `.paragtd.json` at the top of the Org directory once
+startup has finished. It lists the core files, the TODO keywords, the capture
+templates (only those with a literal string template and a file target), the
+sequencing defaults and the astro settings, as this Emacs has them, including
+site templates. A tool that reads the tree without Emacs can take the layout
+from it rather than copying paragtd's defaults. agent-media's Organiser, the
+phone app, does this.
+
+The file is only rewritten when its content changes. It sits in the tree, so
+whatever syncs the tree carries it to other hosts. `M-x paragtd-export`
+writes it on demand, and setting `paragtd-export-file` to nil turns it off.
+On a host with no Emacs session, `bin/paragtd-export` writes paragtd's
+defaults from a batch Emacs.

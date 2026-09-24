@@ -10,6 +10,7 @@
 (require 'paragtd-sequence)
 (require 'paragtd-routines)
 (require 'paragtd-astro)
+(require 'paragtd-export)
 
 ;;;###autoload
 (defun paragtd-setup ()
@@ -17,7 +18,8 @@
   (interactive)
   (paragtd-setup-paths)
   (paragtd-setup-capture)
-  (paragtd-setup-sequence))
+  (paragtd-setup-sequence)
+  (paragtd-setup-export))
 
 (provide 'paragtd)
 

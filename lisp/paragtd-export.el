@@ -43,7 +43,7 @@ Prefix entries (a key and a description only), targets other than a
 file, and templates that are not a literal string are left out: a tool
 outside Emacs cannot evaluate them."
   (pcase tpl
-    (`(,key ,desc ,type ,target ,(and (pred stringp) body) . ,_)
+    (`(,key ,desc ,type ,target ,(and (pred stringp) body) . ,props)
      (let ((file (and (consp target) (stringp (nth 1 target)) (nth 1 target))))
        (when file
          `((key . ,key)
@@ -53,6 +53,9 @@ outside Emacs cannot evaluate them."
            (file . ,(paragtd-export--relative file))
            ,@(when (eq (car target) 'file+headline)
                `((headline . ,(nth 2 target))))
+           ,@(when (plist-get props :tree-type)
+               `((tree_type . ,(symbol-name (plist-get props :tree-type)))))
+           ,@(when (plist-get props :prepend) '((prepend . t)))
            (template . ,body)))))))
 
 (defun paragtd-export--keywords ()

@@ -1,8 +1,10 @@
 (add-to-list 'load-path (expand-file-name "../lisp" (file-name-directory load-file-name)))
 (require 'paragtd)
 (paragtd-setup)
-(unless (member (expand-file-name "~/org/astro.org") org-agenda-files)
-  (error "astro.org missing from agenda files"))
+(unless (member (expand-file-name "~/org/lunar.org") org-agenda-files)
+  (error "lunar.org missing from agenda files"))
+(when (member (expand-file-name "~/org/astro.org") org-agenda-files)
+  (error "astro.org is in the agenda files; it has its own view"))
 (unless (member (expand-file-name "~/org/routines.org") org-agenda-files)
   (error "routines.org missing from agenda files"))
 (unless org-enforce-todo-dependencies

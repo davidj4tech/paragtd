@@ -183,24 +183,38 @@ def heading(lines: list[str], level: int, title: str, moment: dt.datetime, timez
     lines.append("")
 
 
-def write_alerts(year: int, output: Path, timezone_name: str, append: bool = False) -> None:
-    timezone = ZoneInfo(timezone_name)
+def _add_year(output: Path, year: int, header: list[str], body: list[str], append: bool) -> tuple[Path, str]:
+    """What OUTPUT should hold with YEAR added: BODY after its current text
+    when appending, else after HEADER. Refuses a year it already has."""
     existing = output.read_text(encoding="utf-8") if append and output.exists() else None
-    lines: list[str] = []
     if existing is None:
-        lines += [
-            "#+title: Astro Alerts",
-            "#+filetags: astro lunar routines",
-            "",
-        ]
+        return output, "\n".join(header + body)
+    if f"* {year} " in existing:
+        raise SystemExit(f"{output} already contains {year} alerts; regenerate without --append")
+    separator = "" if existing.endswith("\n") else "\n"
+    return output, existing + separator + "\n".join(body)
+
+
+def write_alerts(year: int, output: Path, timezone_name: str, append: bool = False,
+                 lunar_output: Path | None = None) -> None:
+    """Write YEAR's alerts to OUTPUT. With LUNAR_OUTPUT, the new and full moon
+    routines (the ones asking for a check-in) go there instead, so that file
+    can sit in the agenda while the rest is looked at on purpose."""
+    timezone = ZoneInfo(timezone_name)
+    lines: list[str] = []
+    lunar: list[str] = []
     lines.append(f"* {year} Lunar Routines")
+    if lunar_output is not None:
+        lunar.append(f"* {year} Lunar Routines")
     for title, phase, moment in moon_phase_events(year):
+        routine = phase in ("New", "Full")
         note = (
             "- Perform the lunar check-in/review."
-            if phase in ("New", "Full")
+            if routine
             else "- Quick lunar check-in: course-correct on what the last phase started."
         )
-        heading(lines, 2, title, moment, timezone, {"BODY": "Moon", "PHASE": phase}, [note])
+        target = lunar if routine and lunar_output is not None else lines
+        heading(target, 2, title, moment, timezone, {"BODY": "Moon", "PHASE": phase}, [note])
 
     lines.append(f"* {year} Sun Sign Alerts")
     aries_ingress = None
@@ -221,14 +235,12 @@ def write_alerts(year: int, output: Path, timezone_name: str, append: bool = Fal
     for _, sign, moment in body_ingresses(year, swe.MOON, "Moon", dt.timedelta(hours=3)):
         heading(lines, 2, f"Moon enters {sign}", moment, timezone, {"BODY": "Moon", "SIGN": sign}, ["- Note the emotional/weather shift."])
 
-    text = "\n".join(lines)
-    if existing is not None:
-        if f"* {year} Lunar Routines" in existing:
-            raise SystemExit(f"{output} already contains {year} alerts; regenerate without --append")
-        separator = "" if existing.endswith("\n") else "\n"
-        output.write_text(existing + separator + text, encoding="utf-8")
-    else:
-        output.write_text(text, encoding="utf-8")
+    # Both checked before either is written, so a refusal leaves both alone.
+    writes = [_add_year(output, year, ["#+title: Astro Alerts", "#+filetags: astro lunar routines", ""], lines, append)]
+    if lunar_output is not None:
+        writes.append(_add_year(lunar_output, year, ["#+title: Lunar Routines", "#+filetags: lunar routines", ""], lunar, append))
+    for path, text in writes:
+        path.write_text(text, encoding="utf-8")
 
 
 def main() -> int:
@@ -241,9 +253,16 @@ def main() -> int:
         action="store_true",
         help="Append this year to an existing file instead of replacing it.",
     )
+    parser.add_argument(
+        "--lunar-output",
+        type=Path,
+        help="Write the new and full moon routines here instead of --output.",
+    )
     args = parser.parse_args()
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    write_alerts(args.year, args.output, args.timezone, args.append)
+    if args.lunar_output is not None:
+        args.lunar_output.parent.mkdir(parents=True, exist_ok=True)
+    write_alerts(args.year, args.output, args.timezone, args.append, args.lunar_output)
     return 0
 
 

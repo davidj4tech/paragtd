@@ -46,6 +46,25 @@ def test_astro_generator_outputs_expected_sections() -> None:
     assert "** Sun enters Aries\n:PROPERTIES:\n:TIMEZONE: Australia/Melbourne\n:UTC: 2026-03-20 14:45\n" in text
 
 
+def test_new_and_full_moons_can_go_to_their_own_file() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        astro, lunar = Path(tmp) / "astro.org", Path(tmp) / "lunar.org"
+        run = [str(REPO / "bin" / "paragtd-astro-generate"), "--output", str(astro),
+               "--lunar-output", str(lunar)]
+        subprocess.run(run + ["--year", "2026"], check=True)
+        subprocess.run(run + ["--year", "2027", "--append"], check=True)
+        again = subprocess.run(run + ["--year", "2027", "--append"], capture_output=True)
+        astro_text, lunar_text = astro.read_text(), lunar.read_text()
+
+    assert again.returncode != 0
+    assert lunar_text.startswith("#+title: Lunar Routines")
+    assert "* 2026 Lunar Routines" in lunar_text and "* 2027 Lunar Routines" in lunar_text
+    assert "Full moon routine" in lunar_text and "quarter" not in lunar_text
+    assert "Full moon routine" not in astro_text and "New moon routine" not in astro_text
+    assert "First quarter moon routine" in astro_text
+
+
 if __name__ == "__main__":
     test_astro_generator_outputs_expected_sections()
+    test_new_and_full_moons_can_go_to_their_own_file()
     print("astro generator smoke OK")

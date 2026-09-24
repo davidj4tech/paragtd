@@ -58,7 +58,8 @@ available:
 
 ```sh
 bin/bootstrap
-bin/paragtd-astro-generate --year 2026 --output ~/org/astro.org --timezone Australia/Melbourne
+bin/paragtd-astro-generate --year 2026 --output ~/org/astro.org \
+  --lunar-output ~/org/lunar.org --timezone Australia/Melbourne
 ```
 
 It currently generates precise alerts, scheduled in Melbourne time by default,
@@ -67,6 +68,11 @@ astrological year, and moon sign ingresses. Each is a plain heading with an
 active timestamp rather than a scheduled TODO, so it shows in the agenda on its
 day and never lingers as overdue. Each entry also stores the UTC time as an Org
 property.
+
+`astro.org` is not an agenda file: it holds a few hundred alerts a year, and
+has its own agenda view (`A`, the next 45 days). With `--lunar-output`, the new
+and full moon routines, the ones that ask for a check-in, go to `lunar.org`
+instead, which is in the agenda and in the Routines view (`r`).
 
 ## License
 

@@ -15,7 +15,9 @@
 
 (defun paragtd-astro-generate-year (year)
   "Generate astrological alerts for YEAR into `astro.org`.
-The generator expects Kerykeion to be available to Python."
+The new and full moon routines go to `lunar.org`, which is in the agenda;
+the rest is for the \"A\" view.  The generator expects Kerykeion to be
+available to Python."
   (interactive (list (read-number "Astro year: " (string-to-number (format-time-string "%Y")))))
   (let ((file (paragtd-file "astro.org")))
     (make-directory (file-name-directory file) t)
@@ -26,6 +28,7 @@ The generator expects Kerykeion to be available to Python."
       (let ((status (call-process paragtd-astro-generator-command nil t t
                                   "--year" (number-to-string year)
                                   "--output" file
+                                  "--lunar-output" (paragtd-file "lunar.org")
                                   "--timezone" paragtd-astro-timezone)))
         (unless (zerop status)
           (error "Astro generation failed; see %s" (buffer-name)))))

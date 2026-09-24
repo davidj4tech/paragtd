@@ -25,7 +25,7 @@
     "projects.org"
     "visioning.org"
     "routines.org"
-    "astro.org")
+    "lunar.org")
   "Org files that make up the operational agenda surface."
   :type '(repeat string)
   :group 'paragtd)
@@ -81,7 +81,8 @@ For use as `org-agenda-skip-function-global'; leaves other files alone."
            ((agenda ""
                     ((org-agenda-overriding-header "Routines")
                      (org-agenda-span 14)
-                     (org-agenda-files (list ,(paragtd-file "routines.org")))))))
+                     (org-agenda-files (list ,(paragtd-file "routines.org")
+                                             ,(paragtd-file "lunar.org")))))))
           ;; "A", not "a": "a" would shadow the default day/week agenda
           ("A" "Astro alerts"
            ((agenda ""

@@ -13,3 +13,4 @@ fi
 emacs --batch -l "$repo_dir/test/smoke-elisp.el"
 emacs --batch -l "$repo_dir/test/test-sequence.el"
 emacs --batch -l "$repo_dir/test/test-export.el"
+emacs --batch -l "$repo_dir/test/test-zettel.el"

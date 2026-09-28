@@ -15,6 +15,8 @@ site-local capture templates can be appended via
 - Recurring daily, weekly, fortnightly, monthly, yearly, 5-yearly, and 10-yearly routines
 - Astrological and lunar alert generation hooks
 - Sequenced projects: step-by-step blocking, and Gantt-style dates via org-edna
+- Zettels: review draft notes in `roam/notes` (hand-written or distilled from
+  agent sessions by `agent-sessions zk`), promote or discard them
 
 ## Files
 
@@ -22,6 +24,7 @@ site-local capture templates can be appended via
 - `lisp/paragtd-paths.el` - Org directories, agenda files, custom agenda views
 - `lisp/paragtd-capture.el` - capture templates and tickler helper
 - `lisp/paragtd-sequence.el` - sequenced projects (task dependencies)
+- `lisp/paragtd-zettel.el` - zettel review: `paragtd-zettel-review`, `-promote`, `-discard`, and an org-roam capture template (`z`)
 - `lisp/paragtd-export.el` - `.paragtd.json`, the setup described for tools outside Emacs
 - `bin/paragtd-export` - write it from a batch Emacs (paragtd's defaults only)
 - `lisp/paragtd-routines.el` - routine scaffolding
